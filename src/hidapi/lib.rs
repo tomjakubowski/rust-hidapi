@@ -11,12 +11,15 @@ static MAX_USB_STRBUF_SIZE: uint = 127;
 // FIXME: this is most certainly broken: no locale set, probably
 // doesn't work on windows, etc.
 fn from_wstring(wstr: *libc::wchar_t) -> String {
+    use std::mem::size_of;
+    use libc::{c_char, c_void, size_t};
+
     let c_str = unsafe {
         let bufsize = MAX_USB_STRBUF_SIZE;
-        let buf = malloc_raw(bufsize) as *mut libc::c_char;
+        let buf = malloc_raw(bufsize * size_of::<c_char>()) as *mut c_char;
 
-        let bytes = ffi::wcstombs(buf, wstr, bufsize as libc::size_t);
-        if bytes == bufsize as libc::size_t {
+        let bytes = ffi::wcstombs(buf, wstr, bufsize as size_t);
+        if bytes == bufsize as size_t {
             let term = buf.offset(bytes as int - 1);
             *term = '\0' as i8;
         }
@@ -24,8 +27,8 @@ fn from_wstring(wstr: *libc::wchar_t) -> String {
     };
 
     unsafe {
-        let ret = std::str::raw::from_c_str(c_str as *libc::c_char);
-        libc::free(c_str as *mut libc::c_void);
+        let ret = std::str::raw::from_c_str(c_str as *c_char);
+        libc::free(c_str as *mut c_void);
         ret
     }
 }
