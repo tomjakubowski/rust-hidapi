@@ -3,34 +3,42 @@
 #![license = "MIT"]
 
 extern crate libc;
+extern crate sync;
 
 use std::rt::libc_heap::malloc_raw;
 
+use libc::size_t;
+use sync::one::{Once, ONCE_INIT};
+
 static MAX_USB_STRBUF_SIZE: uint = 127;
+
+static mut INIT: Once = ONCE_INIT;
+
+#[inline(always)]
+unsafe fn init() {
+    INIT.doit(|| {
+        ffi::hid_init();
+    });
+}
 
 // FIXME: this is most certainly broken: no locale set, probably
 // doesn't work on windows, etc.
-fn from_wstring(wstr: *libc::wchar_t) -> String {
+unsafe fn from_wstring(wstr: *libc::wchar_t) -> String {
     use std::mem::size_of;
-    use libc::{c_char, c_void, size_t};
+    use libc::{c_char, c_void};
 
-    let c_str = unsafe {
-        let bufsize = MAX_USB_STRBUF_SIZE;
-        let buf = malloc_raw(bufsize * size_of::<c_char>()) as *mut c_char;
+    let bufsize = MAX_USB_STRBUF_SIZE;
+    let c_str = malloc_raw(bufsize * size_of::<c_char>()) as *mut c_char;
 
-        let bytes = ffi::wcstombs(buf, wstr, bufsize as size_t);
-        if bytes == bufsize as size_t {
-            let term = buf.offset(bytes as int - 1);
-            *term = '\0' as i8;
-        }
-        buf
-    };
-
-    unsafe {
-        let ret = std::str::raw::from_c_str(c_str as *c_char);
-        libc::free(c_str as *mut c_void);
-        ret
+    let bytes = ffi::wcstombs(c_str, wstr, bufsize as size_t);
+    if bytes == bufsize as size_t {
+        let term = c_str.offset(bytes as int - 1);
+        *term = '\0' as i8;
     }
+
+    let ret = std::str::raw::from_c_str(c_str as *c_char);
+    libc::free(c_str as *mut c_void);
+    ret
 }
 
 #[allow(dead_code, raw_pointer_deriving)]
@@ -85,6 +93,8 @@ impl HidDevice {
     pub fn open(vendor_id: libc::c_ushort, product_id: libc::c_ushort) -> Option<HidDevice> {
         use std::ptr::RawPtr;
 
+        unsafe { init(); }
+
         let ptr = unsafe { ffi::hid_open(vendor_id, product_id, RawPtr::null()) };
         if ptr.is_null() {
             None
@@ -98,6 +108,8 @@ impl HidDevice {
     }
 
     pub fn open_path(path: &str) -> Option<HidDevice> {
+        unsafe { init(); }
+
         let ptr = path.with_c_str(|c_str| {
             unsafe { ffi::hid_open_path(c_str) }
         });
@@ -112,13 +124,11 @@ impl HidDevice {
     // TODO: error handling?
     pub fn send_feature_report(&self, buf: &[u8]) {
         unsafe {
-            ffi::hid_send_feature_report(self.dev, &buf[0], buf.len() as libc::size_t);
+            ffi::hid_send_feature_report(self.dev, &buf[0], buf.len() as size_t);
         }
     }
 
     pub fn get_feature_report(&self, buf: &mut [libc::c_uchar]) {
-        use libc::size_t;
-
         unsafe {
             let size = ffi::hid_get_feature_report(self.dev, &mut buf[0], buf.len() as size_t);
 
@@ -135,7 +145,7 @@ impl HidDevice {
             let bufsize = MAX_USB_STRBUF_SIZE;
             let buf = (bufsize * size_of::<libc::wchar_t>()) as *mut _;
 
-            let err = ffi::hid_get_product_string(self.dev, buf, bufsize as libc::size_t);
+            let err = ffi::hid_get_product_string(self.dev, buf, bufsize as size_t);
             if err != 0 {
                 fail!("failed to get product string");
             }
@@ -190,6 +200,8 @@ impl HidDeviceInfo {
 
 pub fn enumerate(vendor_id: libc::c_ushort, product_id: libc::c_ushort) -> Vec<HidDeviceInfo> {
     unsafe {
+        init();
+
         let head = ffi::hid_enumerate(vendor_id, product_id);
         let mut devs = vec![];
         let mut cur = head;
