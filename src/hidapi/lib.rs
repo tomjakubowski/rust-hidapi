@@ -47,11 +47,14 @@ mod ffi {
         pub fn hid_open(vendor_id: c_ushort, product_id: c_ushort, serial_number: *wchar_t)
                         -> *mut HidDevice;
         pub fn hid_open_path(path: *c_char) -> *mut HidDevice;
-        pub fn hid_close(device: *mut HidDevice);
+        pub fn hid_write(device: *mut HidDevice, data: *c_uchar, len: size_t) -> c_int;
+        pub fn hid_read(device: *mut HidDevice, data: *mut c_uchar, len: size_t) -> c_int;
+
         pub fn hid_send_feature_report(device: *mut HidDevice, data: *c_uchar, len: size_t)
                                        -> c_int;
         pub fn hid_get_feature_report(device: *mut HidDevice, data: *mut c_uchar, len: size_t)
                                       -> c_int;
+        pub fn hid_close(device: *mut HidDevice);
         pub fn hid_get_product_string(device: *mut HidDevice, string: *mut wchar_t, maxlen: size_t)
                                       -> c_int;
     }
@@ -97,7 +100,8 @@ impl HidDevice {
         }
     }
 
-    // TODO: error handling?
+    // FIXME: figure out how to deal with errors
+    // FIXME: should these all be &mut self?
     pub fn send_feature_report(&self, buf: &[u8]) {
         unsafe {
             ffi::hid_send_feature_report(self.dev, &buf[0], buf.len() as size_t);
@@ -112,6 +116,22 @@ impl HidDevice {
                 fail!("failed to read feature report");
             }
         };
+    }
+
+    // FIXME: add support for hid_read_timeout
+    pub fn read(&self, buf: &mut [libc::c_uchar]) {
+        unsafe {
+            let size = ffi::hid_read(self.dev, &mut buf[0], buf.len() as size_t);
+            if size == -1 {
+                fail!("failed to read");
+            }
+        }
+    }
+
+    pub fn write(&self, buf: &[libc::c_uchar]) {
+        unsafe {
+            ffi::hid_write(self.dev, &buf[0], buf.len() as size_t);
+        }
     }
 }
 
