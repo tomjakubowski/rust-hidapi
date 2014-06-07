@@ -5,12 +5,8 @@
 extern crate libc;
 extern crate sync;
 
-use std::rt::libc_heap::malloc_raw;
-
 use libc::size_t;
 use sync::one::{Once, ONCE_INIT};
-
-static MAX_USB_STRBUF_SIZE: uint = 127;
 
 static mut INIT: Once = ONCE_INIT;
 
@@ -19,26 +15,6 @@ unsafe fn init() {
     INIT.doit(|| {
         ffi::hid_init();
     });
-}
-
-// FIXME: this is most certainly broken: no locale set, probably
-// doesn't work on windows, etc.
-unsafe fn from_wstring(wstr: *libc::wchar_t) -> String {
-    use std::mem::size_of;
-    use libc::{c_char, c_void};
-
-    let bufsize = MAX_USB_STRBUF_SIZE;
-    let c_str = malloc_raw(bufsize * size_of::<c_char>()) as *mut c_char;
-
-    let bytes = ffi::wcstombs(c_str, wstr, bufsize as size_t);
-    if bytes == bufsize as size_t {
-        let term = c_str.offset(bytes as int - 1);
-        *term = '\0' as i8;
-    }
-
-    let ret = std::str::raw::from_c_str(c_str as *c_char);
-    libc::free(c_str as *mut c_void);
-    ret
 }
 
 #[allow(dead_code, raw_pointer_deriving)]
@@ -137,24 +113,6 @@ impl HidDevice {
             }
         };
     }
-
-    pub fn get_product_string(&self) -> String {
-        use std::mem::size_of;
-
-        unsafe {
-            let bufsize = MAX_USB_STRBUF_SIZE;
-            let buf = (bufsize * size_of::<libc::wchar_t>()) as *mut _;
-
-            let err = ffi::hid_get_product_string(self.dev, buf, bufsize as size_t);
-            if err != 0 {
-                fail!("failed to get product string");
-            }
-
-            let ret = from_wstring(buf as *libc::wchar_t);
-            libc::free(buf as *mut libc::c_void);
-            ret
-        }
-    }
 }
 
 impl Drop for HidDevice {
@@ -186,10 +144,10 @@ impl HidDeviceInfo {
                 path: std::str::raw::from_c_str((*dev).path),
                 vendor_id: (*dev).vendor_id,
                 product_id: (*dev).product_id,
-                serial_number: from_wstring((*dev).serial_number),
+                serial_number: "FIXME".to_string(),
                 release_number: (*dev).release_number,
-                manufacturer_string: from_wstring((*dev).manufacturer_string),
-                product_string: from_wstring((*dev).product_string),
+                manufacturer_string: "FIXME".to_string(),
+                product_string: "FIXME".to_string(),
                 usage_page: (*dev).usage_page,
                 usage: (*dev).usage,
                 interface_number: (*dev).interface_number
