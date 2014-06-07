@@ -17,13 +17,11 @@ unsafe fn init() {
     });
 }
 
-#[allow(dead_code, raw_pointer_deriving)]
 mod ffi {
     use libc::{c_char, c_int, c_uchar, c_ushort, c_void, size_t, wchar_t};
 
     pub type HidDevice = c_void;
 
-    #[deriving(Show)]
     pub struct HidDeviceInfo {
         pub path: *c_char,
         pub vendor_id: c_ushort,
@@ -41,7 +39,6 @@ mod ffi {
     #[link(name = "hidapi")]
     extern "C" {
         pub fn hid_init() -> c_int;
-        pub fn hid_exit() -> c_int;
         pub fn hid_enumerate(vendor_id: c_ushort, product_id: c_ushort) -> *mut HidDeviceInfo;
         pub fn hid_free_enumeration(devs: *mut HidDeviceInfo);
         pub fn hid_open(vendor_id: c_ushort, product_id: c_ushort, serial_number: *wchar_t)
@@ -55,12 +52,6 @@ mod ffi {
         pub fn hid_get_feature_report(device: *mut HidDevice, data: *mut c_uchar, len: size_t)
                                       -> c_int;
         pub fn hid_close(device: *mut HidDevice);
-        pub fn hid_get_product_string(device: *mut HidDevice, string: *mut wchar_t, maxlen: size_t)
-                                      -> c_int;
-    }
-
-    extern "C" {
-        pub fn wcstombs(dst: *mut c_char, src: *wchar_t, len: size_t) -> size_t;
     }
 }
 
