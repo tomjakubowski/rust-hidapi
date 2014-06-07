@@ -114,11 +114,15 @@ impl_buttons!(Xbox360Msg,
               y: 15)
 
 pub fn main() {
-    use std::mem::size_of;
-
     let dev = HidDevice::open(0x045e, 0x028e).expect("No HID controller detected");
-    println!("Found device! Enabling blinkenlights...");
-    println!("size: {}", size_of::<bool>());
+    println!("Found device!");
+    println!("Press A to blink, B to stop, X to rotate");
+
+    static LED_ALL_OFF: u8 = 0x00;
+    static LED_ALL_BLINK: u8 = 0x01;
+    static LED_ROTATE: u8 = 0x0A;
+
+    dev.write([0x01, 0x03, LED_ALL_OFF]);
 
     loop {
         let msg = {
@@ -126,8 +130,13 @@ pub fn main() {
             dev.read(buf);
             Xbox360Msg::new(buf)
         };
-        println!("{}", msg);
-        // println!("{} {} {} {}", msg.a(), msg.b(), msg.x(), msg.y());
-        // println!("buf {:08t} {:08t}", buf[2], buf[3]);
+
+        if msg.a() {
+            dev.write([0x01, 0x03, LED_ALL_BLINK]);
+        } else if msg.b() {
+            dev.write([0x01, 0x03, LED_ALL_OFF]);
+        } else if msg.x() {
+            dev.write([0x01, 0x03, LED_ROTATE]);
+        }
     }
 }
