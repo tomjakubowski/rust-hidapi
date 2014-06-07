@@ -1,4 +1,7 @@
 language: c
+env:
+  global:
+    - secure: h2PBHrsRa94qrWZYSs+B0kwzeVw7uFFyaZ/0hDIxBd+GRHi5WgyjGL+5ZJMnFayahvqwoiaJYWzs2gI5pxCvTGpdUlfZFZmazjZtUMXViyRd1OhEGVk/oG8KRALcbyfBAIMpPeddvS/4H5e5QkMlr+8QCMSn28IjftjZlngQ8V4=
 before_install:
   - sudo apt-get update -qq
 install:
@@ -16,3 +19,6 @@ script:
   # FIXME: build + test all crates
   - make build_hidapi
   - make doc
+
+after_script:
+  - curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh
