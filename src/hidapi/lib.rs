@@ -67,13 +67,13 @@ mod ffi {
     pub type HidDevice = c_void;
 
     pub struct HidDeviceInfo {
-        pub path: *c_char,
+        pub path: *const c_char,
         pub vendor_id: c_ushort,
         pub product_id: c_ushort,
-        pub serial_number: *wchar_t,
+        pub serial_number: *const wchar_t,
         pub release_number: c_ushort,
-        pub manufacturer_string: *wchar_t,
-        pub product_string: *wchar_t,
+        pub manufacturer_string: *const wchar_t,
+        pub product_string: *const wchar_t,
         pub usage_page: c_ushort,
         pub usage: c_ushort,
         pub interface_number: c_int,
@@ -85,13 +85,13 @@ mod ffi {
         pub fn hid_init() -> c_int;
         pub fn hid_enumerate(vendor_id: c_ushort, product_id: c_ushort) -> *mut HidDeviceInfo;
         pub fn hid_free_enumeration(devs: *mut HidDeviceInfo);
-        pub fn hid_open(vendor_id: c_ushort, product_id: c_ushort, serial_number: *wchar_t)
+        pub fn hid_open(vendor_id: c_ushort, product_id: c_ushort, serial_number: *const wchar_t)
                         -> *mut HidDevice;
-        pub fn hid_open_path(path: *c_char) -> *mut HidDevice;
-        pub fn hid_write(device: *mut HidDevice, data: *c_uchar, len: size_t) -> c_int;
+        pub fn hid_open_path(path: *const c_char) -> *mut HidDevice;
+        pub fn hid_write(device: *mut HidDevice, data: *const c_uchar, len: size_t) -> c_int;
         pub fn hid_read(device: *mut HidDevice, data: *mut c_uchar, len: size_t) -> c_int;
 
-        pub fn hid_send_feature_report(device: *mut HidDevice, data: *c_uchar, len: size_t)
+        pub fn hid_send_feature_report(device: *mut HidDevice, data: *const c_uchar, len: size_t)
                                        -> c_int;
         pub fn hid_get_feature_report(device: *mut HidDevice, data: *mut c_uchar, len: size_t)
                                       -> c_int;
@@ -210,7 +210,7 @@ pub struct HidDeviceInfo {
 }
 
 impl HidDeviceInfo {
-    fn from_raw_device_info(dev: *ffi::HidDeviceInfo) -> HidDeviceInfo {
+    fn from_raw_device_info(dev: *const ffi::HidDeviceInfo) -> HidDeviceInfo {
         unsafe {
             HidDeviceInfo {
                 path: std::str::raw::from_c_str((*dev).path),
@@ -241,7 +241,7 @@ pub fn enumerate(vendor_id: libc::c_ushort, product_id: libc::c_ushort) -> Vec<H
         let mut cur = head;
 
         while !cur.is_null() {
-            devs.push(HidDeviceInfo::from_raw_device_info(cur as *ffi::HidDeviceInfo));
+            devs.push(HidDeviceInfo::from_raw_device_info(cur as *const ffi::HidDeviceInfo));
             cur = (*cur).next;
         }
         ffi::hid_free_enumeration(head);
