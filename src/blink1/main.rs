@@ -25,7 +25,7 @@ pub fn main() {
     }
 
     // BEGIN highfalutin (bad) way of doing:
-    // let blink1 = hidapi::open(BLINK1_VENDOR_NUM, BLINK1_PRODUCT_NUM).unwrap();
+    // let blink1 = HidDevice::open(BLINK1_VENDOR_NUM, BLINK1_PRODUCT_NUM).unwrap();
     let blink1 = devices.iter().find(|&inf| {
         inf.vendor_id == BLINK1_VENDOR_NUM && inf.product_id == BLINK1_PRODUCT_NUM
     });
