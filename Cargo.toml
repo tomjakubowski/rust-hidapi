@@ -1,0 +1,16 @@
+[package]
+name = "hidapi"
+version = "0.1.0"
+authors = [ "Tom Jakubowski <tom@crystae.net>" ]
+
+[[lib]]
+name = "hidapi"
+path = "src/hidapi/lib.rs"
+
+[[bin]]
+name = "blink1"
+path = "src/blink1/main.rs"
+
+[[bin]]
+name = "x360"
+path = "src/x360/main.rs"
