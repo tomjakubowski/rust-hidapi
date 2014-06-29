@@ -1,7 +1,7 @@
 language: c
 env:
   global:
-    - secure: h2PBHrsRa94qrWZYSs+B0kwzeVw7uFFyaZ/0hDIxBd+GRHi5WgyjGL+5ZJMnFayahvqwoiaJYWzs2gI5pxCvTGpdUlfZFZmazjZtUMXViyRd1OhEGVk/oG8KRALcbyfBAIMpPeddvS/4H5e5QkMlr+8QCMSn28IjftjZlngQ8V4=
+    - secure: tuG6DoMSYruOZyGCSLuWAJtRi9JG4ZwSPPLSwgmCMSt+k2sTBM6IoG+Xm8BgeCGx6f2V/KyoFh+RGRk7897u4hKQ6xYjxJXQkRg036d5qfk6jzAF1H0/bmM9ZDpaqBOYYjNDfQzbn8ivaso653mkSfDF3K5loulddPggEyfr6NU=
 
 install:
   - bash ./.travis.deps.sh
