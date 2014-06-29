@@ -80,6 +80,8 @@ mod ffi {
         pub next: *mut HidDeviceInfo
     }
 
+    // FIXME: this is broken on Linux, where hidapi installs as
+    // `hidapi-libusb` and `hidapi-hidraw`. *sigh*
     #[link(name = "hidapi")]
     extern "C" {
         pub fn hid_init() -> c_int;

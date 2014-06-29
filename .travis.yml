@@ -2,23 +2,12 @@ language: c
 env:
   global:
     - secure: h2PBHrsRa94qrWZYSs+B0kwzeVw7uFFyaZ/0hDIxBd+GRHi5WgyjGL+5ZJMnFayahvqwoiaJYWzs2gI5pxCvTGpdUlfZFZmazjZtUMXViyRd1OhEGVk/oG8KRALcbyfBAIMpPeddvS/4H5e5QkMlr+8QCMSn28IjftjZlngQ8V4=
-before_install:
-  - sudo apt-get update -qq
+
 install:
-  - curl -O http://static.rust-lang.org/dist/rust-nightly-x86_64-unknown-linux-gnu.tar.gz
-  - tar xfz rust-nightly-x86_64-unknown-linux-gnu.tar.gz
-  - (cd rust-nightly-x86_64-unknown-linux-gnu/ && sudo ./install.sh)
-  - sudo apt-get install libudev-dev libusb-1.0-0-dev
-  - sudo apt-get install autotools-dev autoconf automake libtool
-  - curl -L -O https://github.com/signal11/hidapi/archive/hidapi-0.8.0-rc1.tar.gz
-  - tar xfz hidapi-0.8.0-rc1.tar.gz
-  - (cd hidapi-hidapi-0.8.0-rc1 && ./bootstrap && ./configure && make && sudo make install)
+  - bash ./.travis.deps.sh
 
 script:
-  - rustc --version
-  # FIXME: build + test all crates
-  - make build_hidapi
-  - make doc
+  - bash ./.travis.build.sh
 
 after_script:
-  - curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh
+  - bash ./.travis.after.sh

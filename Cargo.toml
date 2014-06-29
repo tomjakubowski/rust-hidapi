@@ -1,0 +1,8 @@
+[package]
+name = "hidapi"
+version = "0.1.0"
+authors = [ "Tom Jakubowski <tom@crystae.net>" ]
+
+[[lib]]
+name = "hidapi"
+path = "src/hidapi/lib.rs"
